@@ -1,0 +1,33 @@
+KUBERNETES COMMANDS -:
+**********************
+1. kubectl get all -> it gets all the components inside the cluster
+2. kubectl apply -f [file name] -> to run and create a specified component 
+3. kubectl get secret -> to get the running secrets
+4. kubectl get deployments -> gives you all the created deployment components
+5. kubectl get pod -> gives you all the created pod 
+6. kubectl describe [pod,service, deployment] [(pod,service, deployment) names] -> will show steps taken to craete the queried  component
+
+7. kubectl get pod --watch
+8. kubectl get pod -o wide -> provide additional info about the pod
+9. kubectl logs [pod name] -> to see the logs
+10. kubectl get exec -it [pod-name] -- bin/bash -> to switch in to the pod shell 
+11. kubectl get namespaces -> give the namespaces
+12. kubectl cluster-info -> to get the cluster-info from kube-public namespace config map.
+13. kubectl create namespace [name of the namespace] -> to create a namespace
+14. we can also create namespace through nam config files.
+15. kubectl api-resources --namespaced=false -> You can list the resources that are not bound to the namespace
+16. kubectl api-resources --namespaced=true -> You can list the resources that are bound to the namespace
+17. To get the resources from the name space we have to use "-n [namespace name]" at the end
+ex -: kubectl get configMap -n default
+18. to create resource in specific namespace -> Kubectl apply -f [config file name] --namespace=my-namespace
+19. minikube addons enable ingress -> to add kubernetes Nginx Ingress Controller.
+
+20. kubectl exec -it nginx -c sidecar -- /bin/sh -> here -c specifies the which container when you have 2 in the pod. 
+
+21. netstat -ln list all the application running 
+
+22. to hit a request by curl -> curl localhost:80
+
+minikube start --vm-driver=hyperv --hyperv-virtual-switch=minikube-virtual-switch
+
+

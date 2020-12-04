@@ -1,0 +1,323 @@
+Micro Services -:
+************************
+
+1. Small Autonomous Services that work together.
+
+2. The Microservice architectural style is an approach to developing a single application as a suite of small services, each running in its own process and communicating with lightweight mechanism, often an HTTP resource API. 
+
+-> These Services are built around business capabilities and independently deployable by fully automated deployment machinery
+
+-> There is bare minimum of centralized management of these services, which may be written in different programming languages and use different data storage technologies. 
+
+In Short Micro services are services which are exposed by Rest, well defined by boundaries and small well chosen deployable units and they should be cloud enabled(Should act  like according to the load in the cloud).
+
+Challenges with Microservices -:
+**********************************
+1. Bounded Context -: Setting up boundary for Microservices is difficult at first, it is a evolutionary process to set well
+*******************   defines boundaries.
+
+2. Configuration Management -:  Maintaining more number of instance will become burden for operations team
+*******************************
+
+3. Dynamic Scale up and Scale down -: Dynamic load balancing, how the load is distributed and how the instances are getting   
+**********************************    created.
+
+4. Visibility -:  We need some kind of monitoring to identify the helath of Microservices and the bugs which might occur ****************  thus we need to have centralized log mechanism around all the Microservices
+
+5. Pack of Cards -: Building Microservices is king of building pack of cards so when one card collapse entire pack will 	
+******************* collapse. So we need to have some Fault-Tolernce Mechanism arouns all the Microservices
+
+Spring Cloud -:
+****************
+-> Spring cloud will solve all the challenges ascribed above
+
+----------> Spring Cloud provides tools for developers to quickly build some of the common patterns in distributed systems (e.g. configuration management, service discovery, circuit breakers, intelligent routing, micro-proxy, control bus, one-time tokens, global locks, leadership election, distributed sessions, cluster state).
+
+
+Spring Cloud Config Server will solve the problem of Configuration Management.
+***************************
+
+-> Spring Cloud Config Server provides an approach where you can store all the configuration of different environments of different micro services. where all the configurations will stored at one place (GIT Repo)
+
+
+Dynamic Scale up and Dynamic sclae down -:
+******************************************
+Naming Server (Eureka) -> All the instances of all the micro services will be registered with Naming server
+						  Service Discovery via Naming server helps Dynamic relationships between Microservices
+
+Ribbon (Client side load balancing) -> it will make sure the load get distributed evenly among the Microservices
+
+Feign (Easier REST Clients) -> It is a mechanism to write simple Rest APIs
+
+Visibility and Monitoring -:
+*****************************
+
+1. Zipkin Distributed Tracing -> By using Spring Cloud Sleuth to assign ID to request across multiple components and By using 
+								 ZIPKIN Distributed Tracing to trace request across multiple components
+
+2. Netflix API Gateway -> Security, logging, analytics will be provided by API gateways
+
+Fault-Tolernce -:
+*****************
+
+Hystrix -: if a service is down, Hystrix helps us to configure a default response
+
+Advantages of Microservices Architecture -:
+*********************************************
+
+1. New Technology and Process Adaption becomes very easy
+
+2. Dynamic Scaling 
+
+3. Faster Release Cycles -: As Microservices are not tightly coupled, we can release new features faster in the market.
+
+Need For Centralized Application Configuration or Centralized Microservices Configuration -:
+**********************************************************************************************
+
+Spring Cloud Config will act as Centralized Configuration Server to serve the configurations for Microservices in different envs
+
+New Approach of reading values from application.prop file
+**********************************************************
+1. Instead of annotating class with @Configuration and using @Value annotation we can have new approach for reading it.
+
+--> make class annotated with @ConfigurationProperties("limits-service"), where limits-service is property file
+
+Setting Up Spring Config Server
+*******************************
+1. Need to have mandatory server Dependency
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-server</artifactId>
+		</dependency>
+
+-> and thene we need create git repo
+1. git init
+2. git add -A or the files
+3. git commit -m "message"
+
+
+and then link git repo with config server by Link Source option
+
+and configure git local repo URL
+********************************
+spring.cloud.config.server.git.uri=file://D:\Spring\spring-boot-micro-services\git-localconfig-repo
+
+and then annotate application as @EnableConfigServer to tell it is a spring-cloud-config server
+
+
+the Git local repo file can be accessed by their names
+
+ex -: http://localhost:8888/limits-service/qa
+
+Connecting Service to Spring cloud config server  -:
+**************************************************
+
+we need to create a bootstrap.properties file in the resource folder 
+
+and configure config server url in that properties file as spring.cloud.config.uri=http://localhost:8888
+
+By using Environment values we can determine the port of the application on which it is running
+
+env.getProperty("local.server.port") here env is Environment
+
+REST TEMPLATE -:
+****************
+-> Rest Template is used to invoke one Microservice from the other Microservice which was exposed by using HTTP 
+
+ResponseEntity<CurrencyConversionBean> responseEntity = restTemplate.getForEntity(
+				"http://localhost:8000/currency-exchange/from/{from}/to/{to}", CurrencyConversionBean.class,
+				uriVariables);
+				
+				
+Feign Client -: Rest Service client -> it makes it easy to call Restful webservices
+***************
+
+Fiegn helps us to simply the client codevto talk to Restful webservice
+
+1. Feign makes very easy to invoke other micro services instead of writing lot of code to communicate
+2. It will provide integration with ribbon - a client side load balancer
+
+Feign is one of the component that spring cloud inherits from netflix
+
+Steps -:
+1. Add open fiegn dependency
+2. Annoate @EnableFeignClients("com.ma.microservices.currencyconversionservice") on top of the main application class
+3. Define a feign proxy class by annotating it with @FeignClient(name="currency-exchange-service", url="localhost:8000")
+
+Ribbon Load Balancing -:
+************************
+By using Feign Ribbon will districute the load across multiple instances.
+
+Dependency to be added
+
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+		</dependency>
+
+we need to annotate the proxy class as @RibbonClient(name="currency-exchange-service") 
+
+here we will specify the instances of the target service URLs in applicatin.prop as 
+currency-exchange-service.ribbon.listOfServers=http://localhost:8000,http://localhost:8001
+
+so that ribbon will automatically districutes the load in between those
+
+Eureka Naming Server 
+**********************
+1. Service Registration
+
+-> All the instances of all the microservices would register with the naming server. whenever a new microservice instance comes up it will register with the Eureka naming server this is called Service Registration
+
+2. Service Discovery
+
+-> Whenever a service wants to talk to another service, it will contact namin server first and ask what are the instances of the service that are currently running
+
+eureka.client.register-with-eureka=false
+here we are telling not to register it self with eureka
+
+eureka.client.fetch-registry=false
+here we are telling not to fetch service registry information from eureka server
+
+By adding the below dependency to other micro services, we can register them to the micro services
+
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+	
+By annotating main class with @EnableDiscoveryClient allows us to register the service with eureka
+
+we need to configure eureka host url in application properties as below
+
+
+API Gateways -:
+*****************
+As in Microservices Architecture, we would have hundreds of services that are talking to each other. There weill be common features we would want to implement for all these microservices like
+
+1. Authentication, Authorization and security, every call to microservice should checked.
+
+2. Rate Limits -> Limits on the calls to Microservice. restricting number of hours for a microservice.
+
+3. Fault Tolernce -> When any servce down, that service should send default response back
+
+4. Service Aggregation -> if a consumer needs call 15 microservices, the we need to aggregate all the microservice by enabling one call to the end user.
+
+5. Logging
+
+-> Whenever a Microservice wants to call another Microservice, then it must go through a API Gateway for validation and the above checks
+
+-> As all the services are going through API Gateways, Api Gateways will act as great way for debugging and analytics
+
+-> All calls between Microservices are intercepted and making them to pass through API Gateway
+
+wehen we a service wants to send request to another service through ZUUL API Gateway then the request at the source at should be below
+
+http://localhost:8765/[target-application-name]/URI of the target reource
+*********************--------------------------***************************
+ZUUL Service
+
+The ZUUL uses app-name in the url to talk to eureka and find the url of the service
+
+Distributed Tracing System -:
+****************************
+we need tracing system because,
+
+1. When there are more services involved, If any problem occurs, it is difficult to find a that.
+
+2. when we want to know the complete flow of any request like which service it is calling 
+
+Distributed Tracing System provides one centralized location where we would want to see the complete chain of what happened with a specific request
+
+we will use Spring-cloud-sleuth with ZIPKIN will assign an unique ID to the request. so that tracing will be there across the components
+
+Spring-cloud-sleuth -> Will assign an unique ID
+ZIPKIN(Distributed Tracing System) -> will trace out the request
+
+-> For this, we will put all the logs of services in the Rabbit MQ and we will send it to ZIPKIN server, where it is consolidated and we would be able to look up at the different request and know what happened with it.
+
+Spring-cloud-sleuth -> Will assign an unique ID
+***********************************************
+we need have dependency as below
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-sleuth</artifactId>
+</dependency>
+
+To tell assign a unique ID for the each request we need initialise the beans as follows
+
+	@Bean
+	public Sampler defaultSampler() {
+		return Sampler.ALWAYS_SAMPLE;
+	}
+
+ZIPKIN(Distributed Tracing System) -> will trace out the request
+*****************************************************************
+
+1. Elastic search logstash and kibana can be used as a centralized logging place, By using ealstic search we can see the logging of a specific request. Here all the logs considated at one place 
+
+2. we will use Zipkin Distributed Tracing Server to get a consolidated view of what is happening across all the microservices, thus we want all the micro service logs to go the ZIPKIN server
+
+3. we will use Rabbit MQ as a log capture from microservices and send them to Zipkin Server where it will be connected to a database
+
+Rabbit MQ is dependent on Erlang so download Erlang first and download rabbitmq later
+
+to start Rabbit MQ server, we need to write the below command on cmd
+************************************
+C:\Program Files\RabbitMQ Server\rabbitmq_server-3.8.8\sbin>rabbitmq-plugins enable rabbitmq_management
+
+username and password are quest
+
+---->And then download ZIPKIN server and run the jar to check whether it is properly working or not
+
+To integrate with rabbit MQ we need set property before running the jar
+
+SET RABBIT_URI=amqp://localhost
+and then run the jar
+
+Connecting Microservices ro RabbitMQ
+**************************************
+		
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-sleuth-zipkin</artifactId>
+		</dependency>
+
+-> With the above dependency we would start logging messages in the format that the ZIPKIN owuld be able to understand
+		
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-bus-amqp</artifactId>
+		</dependency>
+		
+-> With the above dependency we are establishing connection to amqp bus. Default amqp installtion which is used is Rabbit MQ.
+so it will open up a connection between rabbit MQ and ZIPKIN
+
+New Dependencies to be used instead of the above.
+
+	<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-zipkin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.amqp</groupId>
+			<artifactId>spring-rabbit</artifactId>
+		</dependency>
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
